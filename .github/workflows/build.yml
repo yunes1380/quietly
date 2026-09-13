@@ -72,7 +72,9 @@ jobs:
         run: |
           if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
             echo "Regenerating iOS folder..."
-            flutter create --platforms=ios --org com.quietly.app --project-name quietly .
+            flutter create --platforms=ios .
+            flutter pub get
+            flutter gen-l10n
             git status --short
           fi
       - run: flutter build ios --release --no-codesign
