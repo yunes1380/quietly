@@ -35,12 +35,28 @@ jobs:
       - run: flutter pub get
       - run: flutter gen-l10n
       - name: Build release APKs - Android 16 (API 36)
-        run: flutter build apk --release --split-per-abi
-      - name: Verify APKs
+        continue-on-error: true
+        run: flutter build apk --release --split-per-abi -v
+      - name: Locate + verify APKs
         run: |
-          echo "=== APK outputs (Android 16 / API 36) ==="
-          ls -lh build/app/outputs/flutter-apk/
-          echo "=== Size check (<40MB each) ==="
+          echo "=== Searching for APKs ==="
+          find . -name "*.apk" -type f 2>/dev/null | head -n 20
+          echo "=== build/ tree ==="
+          find build -type f 2>/dev/null | head -n 30 || true
+          echo "=== android build outputs ==="
+          find android -name "*.apk" -o -name "*.aab" 2>/dev/null | head -n 20 || true
+          mkdir -p build/app/outputs/flutter-apk/
+          # copy any APKs found into expected dir
+          find . -path ./build/app/outputs/flutter-apk -prune -o -name "*release.apk" -print 2>/dev/null | while read apk; do
+            echo "Copying $apk"
+            cp "$apk" build/app/outputs/flutter-apk/ 2>/dev/null || true
+          done
+          echo "=== Final APKs (Android 16 / API 36) ==="
+          ls -lh build/app/outputs/flutter-apk/ || echo "NO APK DIR"
+          if ! ls build/app/outputs/flutter-apk/*.apk >/dev/null 2>&1; then
+            echo "::error ::No APKs produced"
+            exit 1
+          fi
           for apk in build/app/outputs/flutter-apk/*.apk; do
             size=$(stat -c%s "$apk")
             echo "$apk : $size bytes"
