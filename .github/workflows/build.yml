@@ -34,11 +34,11 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter gen-l10n
-      - name: Build release APKs (split-per-ABI)
+      - name: Build release APKs - Android 16 (API 36)
         run: flutter build apk --release --split-per-abi
       - name: Verify APKs
         run: |
-          echo "=== APK outputs ==="
+          echo "=== APK outputs (Android 16 / API 36) ==="
           ls -lh build/app/outputs/flutter-apk/
           echo "=== Size check (<40MB each) ==="
           for apk in build/app/outputs/flutter-apk/*.apk; do
@@ -50,31 +50,6 @@ jobs:
           done
       - uses: actions/upload-artifact@v4
         with:
-          name: apk-release
+          name: apk-release-android16
           path: build/app/outputs/flutter-apk/*.apk
           if-no-files-found: error
-
-  ios:
-    runs-on: macos-14
-    needs: analyze-test
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: subosito/flutter-action@v2
-        with:
-          channel: 'stable'
-          cache: true
-      - run: flutter pub get
-      - run: flutter gen-l10n
-      # ios/Runner.xcodeproj is missing in repo - regenerate scaffolding,
-      # preserving lib/ and custom Swift files where possible
-      - name: Regenerate iOS scaffolding if missing
-        run: |
-          if [ ! -f ios/Runner.xcodeproj/project.pbxproj ]; then
-            echo "Regenerating iOS folder..."
-            flutter create --platforms=ios .
-            flutter pub get
-            flutter gen-l10n
-            git status --short
-          fi
-      - run: flutter build ios --release --no-codesign
