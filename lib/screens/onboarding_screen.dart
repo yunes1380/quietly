@@ -58,7 +58,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Future<void> _finish() async {
     final PermissionResult r = await ref.read(permissionServiceProvider).request();
     if (!mounted) return;
-    if (r.allGranted) {
+    // Mic is mandatory, notification is optional (foreground service
+    // still runs, just without a visible notification on some OEMs).
+    // Previously required both, which left users stuck on onboarding
+    // with no feedback when they denied notifications.
+    if (r.mic) {
       final SharedPreferences prefs = ref.read(sharedPrefsProvider);
       await prefs.setBool('onboarding_done', true);
       if (mounted) context.go('/home');
