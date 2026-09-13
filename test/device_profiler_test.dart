@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quietly/models/audio_mode.dart';
 import 'package:quietly/services/device_profiler.dart';
 
 void main() {
